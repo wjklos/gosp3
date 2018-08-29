@@ -1,12 +1,8 @@
 package main
 
 import (
-	"crypto/md5"
-	"encoding/hex"
 	"fmt"
 	"net/http"
-	"strconv"
-	"strings"
 	"time"
 
 	// We can do this natively just as easily, but this framework makes
@@ -87,41 +83,42 @@ func main() {
 		} // for
 	}() // go func
 
-	// Make lowercase.
-	go func() {
-		for {
-			if len(lc) > 0 && (len(lc) < cap(lc)) {
-				item = strings.ToLower(<-lc)
-				fmt.Printf("%s\n", item)
-				uc <- item
-			} // if
-		} // for
-	}() // go func
+	// // Make lowercase.
+	// go func() {
+	// 	for {
+	// 		if len(lc) > 0 && (len(lc) < cap(lc)) {
+	// 			item = strings.ToLower(<-lc)
+	// 			fmt.Printf("%s\n", item)
+	// 			uc <- item
+	// 		} // if
+	// 	} // for
+	// }() // go func
 
-	// Make UPPERCASE.
-	go func() {
-		for {
-			if len(uc) > 0 && (len(uc) < cap(uc)) {
-				item = strings.ToUpper(<-uc)
-				fmt.Printf("%s\n", item)
-				hash <- item
-			} // if
-		} // for
-	}() // go func
+	// // Make UPPERCASE.
+	// go func() {
+	// 	for {
+	// 		if len(uc) > 0 && (len(uc) < cap(uc)) {
+	// 			item = strings.ToUpper(<-uc)
+	// 			fmt.Printf("%s\n", item)
+	// 			hash <- item
+	// 		} // if
+	// 	} // for
+	// }() // go func
 
-	// Make hash.
-	go func() {
-		for {
-			if len(hash) > 0 && (len(hash) < cap(hash)) {
-				h := md5.New()
-				h.Write([]byte(<-hash))
-				fmt.Printf("%s\n", hex.EncodeToString(h.Sum(nil)))
-			} // if
-		}
-	}()
+	// // Make hash.
+	// go func() {
+	// 	for {
+	// 		if len(hash) > 0 && (len(hash) < cap(hash)) {
+	// 			h := md5.New()
+	// 			h.Write([]byte(<-hash))
+	// 			fmt.Printf("%s\n", hex.EncodeToString(h.Sum(nil)))
+	// 		} // if
+	// 	}
+	// }()
 
 	// After the 'go func' is dispatched, start the server and listen on the
 	// specified port.
 	fmt.Printf("ready on port %d\n", port)
-	router.Run(":" + strconv.Itoa(port))
+	router.Run(":7718")
+	//router.Run(":" + strconv.Itoa(port))
 } // func
