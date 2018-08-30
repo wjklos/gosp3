@@ -1,40 +1,33 @@
-# This file is a template, and might need editing before it works on your project.
-image: golang:1.10
+# Replace "projectname" and "username"
+image: golang:1.9
 
 variables:
-  # Please edit to your GitLab project
-  REPO_NAME: github.com/captech/gosp2
-
-# Create a symbolic link under $GOPATH, this is needed for local build
-# i.e. /go/src/gitlab.com/ykyuen/gitlab-ci-go-build
-before_script:
-    - go get "github.com/gin-gonic/gin"
-    - echo $GOPATH
-    - echo $CI_PROJECT_NAMESPACE
-    - echo $CI_PROJECT_DIR
-    - echo $CI_PROJECT_NAME
-    - ln -s /builds /go/src/github.com
-    # - cd $GOPATH/src
-    # - mkdir -p github.com/$CI_PROJECT_NAMESPACE
-    # - cd github.com/$CI_PROJECT_NAMESPACE
-    # - ln -s $CI_PROJECT_DIR
-    # - cd $CI_PROJECT_NAME
+  BIN_NAME: gosp2
+  ARTIFACTS_DIR: artifacts
+  GO_PROJECT: gitlab.com/wklos/gosp2
 
 stages:
-    - test
-    - build
+  - build
+  - test
 
-format:
-    stage: test
-    script:
-      - go fmt $(go list ./... | grep -v /vendor/)
-      - go vet $(go list ./... | grep -v /vendor/)
-      #- go test -race $(go list ./... | grep -v /vendor/)
+before_script:
+  - mkdir -p ${GOPATH}/src/${GO_PROJECT}
+  - mkdir -p ${CI_PROJECT_DIR}/${ARTIFACTS_DIR}
+  - go get -u github.com/golang/dep/cmd/dep
+  - cp -r ${CI_PROJECT_DIR}/* ${GOPATH}/src/${GO_PROJECT}/
+  - cd ${GOPATH}/src/${GO_PROJECT}
 
-compile:
-    stage: build
-    script:
-      - go build -race -ldflags "-extldflags '-static'" -o $GOPATH/src/mybinary
-    artifacts:
-      paths:
-        - mybinary
+build-projectname:
+  stage: build
+  script:
+    - dep ensure
+    - go build -o ${CI_PROJECT_DIR}/${ARTIFACTS_DIR}/${BIN_NAME}
+  artifacts:
+    paths:
+      - ${ARTIFACTS_DIR}
+
+test-projectname:
+  stage: test
+  script:
+    - dep ensure
+    - go test -v -cover ./...
