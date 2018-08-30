@@ -1,5 +1,4 @@
-# Replace "projectname" and "username"
-image: golang:1.9
+image: golang:latest
 
 variables:
   BIN_NAME: gosp2
@@ -17,7 +16,7 @@ before_script:
   - cp -r ${CI_PROJECT_DIR}/* ${GOPATH}/src/${GO_PROJECT}/
   - cd ${GOPATH}/src/${GO_PROJECT}
 
-build-projectname:
+build-gosp2:
   stage: build
   script:
     - dep ensure
@@ -26,7 +25,7 @@ build-projectname:
     paths:
       - ${ARTIFACTS_DIR}
 
-test-projectname:
+test-gosp2:
   stage: test
   script:
     - dep ensure
