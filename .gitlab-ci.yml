@@ -8,6 +8,10 @@ variables:
 # Create a symbolic link under $GOPATH, this is needed for local build
 # i.e. /go/src/gitlab.com/ykyuen/gitlab-ci-go-build
 before_script:
+    - echo $GOPATH
+    - echo $CI_PROJECT_NAMESPACE
+    - echo $CI_PROJECT_DIR
+    - echo $CI_PROJECT_NAME
     # - cd $GOPATH/src
     # - mkdir -p github.com/$CI_PROJECT_NAMESPACE
     # - cd github.com/$CI_PROJECT_NAMESPACE
