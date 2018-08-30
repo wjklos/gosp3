@@ -63,7 +63,7 @@ func GetHeartbeatCount(c *gin.Context) {
 
 // PingTheAPI lets the caller know we are alive.
 func PingTheAPI(c *gin.Context) {
-	content := gin.H{"payload": "PONG"}
+	content := gin.H{"payload": "pong"}
 	c.JSON(http.StatusOK, content)
 }
 
