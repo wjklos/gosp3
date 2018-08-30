@@ -19,6 +19,7 @@ before_script:
 build-gosp2:
   stage: build
   script:
+    - echo "Building..."
     - dep ensure
     - go build -o ${CI_PROJECT_DIR}/${ARTIFACTS_DIR}/${BIN_NAME}
   artifacts:
@@ -27,6 +28,10 @@ build-gosp2:
 
 test-gosp2:
   stage: test
+  only: 
+    - dev
+    - qa
   script:
+    - echo "Testing..."
     - dep ensure
     - go test -v -cover ./...
