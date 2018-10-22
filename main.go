@@ -52,6 +52,8 @@ func init() {
 	router.GET("/title", GetTitleAddress)
 	// Show the results of the UPPERCASE process.
 	router.GET("/uc", GetUCAddress)
+	// Show the current results for all processes.
+	router.GET("/all", GetAllAddress)
 	// Make sure we are still alive.
 	router.GET("/ping", PingTheAPI)
 
@@ -89,6 +91,22 @@ func GetUCAddress(c *gin.Context) {
 	c.JSON(http.StatusOK, content)
 }
 
+// GetAllAddress ...
+func GetAllAddress(c *gin.Context) {
+	type all struct {
+		LC    []string
+		Title []string
+		UC    []string
+	}
+	var allAddresses all
+	allAddresses.LC = lcAddress
+	allAddresses.Title = titleAddress
+	allAddresses.UC = ucAddress
+
+	content := gin.H{"payload": allAddresses}
+	c.JSON(http.StatusOK, content)
+}
+
 // GetHeartbeatCount sends the number of times the heartbeat ticker has
 // fired since the program started.
 func GetHeartbeatCount(c *gin.Context) {
@@ -114,8 +132,6 @@ func main() {
 			case <-heartbeat.C:
 				beats++
 				fmt.Printf(`{"date":"%s","app":"gosp2","msgtype":"info","heartbeat":"%d"}`+"\n", time.Now().UTC(), beats)
-				//fmt.Printf("%s gosp2 msgtype=info heartbeat=%d\n", time.Now().UTC(), beats)
-				//fmt.Printf("bump,Bump... @ %s\n", time.Now().UTC())
 			} // select
 		} // for
 	}() // go func
@@ -127,7 +143,6 @@ func main() {
 			case item := <-lc:
 				item = strings.ToLower(item)
 				lcAddress = append(lcAddress, item)
-				time.Sleep(time.Millisecond * 50)
 				title <- item
 			}
 		} // for
@@ -140,19 +155,20 @@ func main() {
 			case item = <-title:
 				item = strings.Title(item)
 				titleAddress = append(titleAddress, item)
-				time.Sleep(time.Millisecond * 100)
 				uc <- item
+				time.Sleep(time.Millisecond * 100)
 			}
 		}
 	}()
 
-	// // Make UPPERCASE.
+	// Make UPPERCASE.
 	go func() {
 		for {
 			select {
 			case item = <-uc:
 				item = strings.ToUpper(item)
 				ucAddress = append(ucAddress, item)
+				time.Sleep(time.Millisecond * 50)
 			}
 		} // for
 	}() // go func
