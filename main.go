@@ -161,5 +161,4 @@ func main() {
 	// specified port.
 	fmt.Printf("%s gosp2 msgtype=info message=engine started, ready on port %d\n", time.Now().UTC(), port)
 	router.Run(":7718")
-	//router.Run(":" + strconv.Itoa(port))
 } // func
