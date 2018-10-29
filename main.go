@@ -47,9 +47,11 @@ func init() {
 
 // ReceiveWrapper ...
 func ReceiveWrapper(c *gin.Context) {
-	localCircuit1.Conductor.Fill(c.Param("word"))
+	if localCircuit1.Switch.LastOperation != http.StatusServiceUnavailable {
+		localCircuit1.Conductor.Fill(c.Param("word"))
+	}
 	content := gin.H{"payload": len(localCircuit1.Conductor.Channel)}
-	c.JSON(localCircuit1.Conductor.LastOperation, content)
+	c.JSON(localCircuit1.Switch.LastOperation, content)
 }
 
 // GetHeartbeatCount sends the number of times the heartbeat ticker has
@@ -76,9 +78,13 @@ func GetCircuitStats(c *gin.Context) {
 	}
 	switch c.Param("pgm") {
 	case "1":
-		content = gin.H{"payload": status{Name: localCircuit1.Conductor.Name, Depth: len(localCircuit1.Conductor.Channel), Switch: len(localCircuit1.Switch.Channel), LastOperation: localCircuit1.Conductor.LastOperation}}
+		content = gin.H{"payload": status{Name: localCircuit1.Conductor.Name, Depth: len(localCircuit1.Conductor.Channel), LastOperation: localCircuit1.Conductor.LastOperation}}
+	case "1h":
+		content = gin.H{"payload": status{Name: localCircuit1.Switch.Name, Depth: len(localCircuit1.Switch.Channel), LastOperation: localCircuit1.Switch.LastOperation}}
 	case "2":
 		content = gin.H{"payload": status{Name: localCircuit2.Conductor.Name, Depth: len(localCircuit2.Conductor.Channel), Switch: len(localCircuit2.Switch.Channel), LastOperation: localCircuit2.Conductor.LastOperation}}
+	case "2h":
+		content = gin.H{"payload": status{Name: localCircuit2.Switch.Name, Depth: len(localCircuit2.Switch.Channel), LastOperation: localCircuit2.Switch.LastOperation}}
 	} // switch
 	c.JSON(http.StatusOK, content)
 }
@@ -104,18 +110,21 @@ func main() {
 	go func() {
 		fmt.Printf("Starting Spoken Word App (1)...\n")
 		localCircuit1 = Circuit{}
-		localCircuit1 = localCircuit1.New()
+		localCircuit1 = *localCircuit1.New()
 		//localCircuit1.Conductor.LastOperation = http.StatusAccepted
 		for {
 			// Watch for stuff to happen.
 			select {
 			case <-localCircuit1.Conductor.Check():
 				fmt.Printf("Speaking Word: %d\n", len(localCircuit1.Conductor.Channel))
-				if localCircuit2.Conductor.LastOperation == http.StatusAccepted || localCircuit2.Conductor.LastOperation == http.StatusTooManyRequests {
-					localCircuit2.Conductor.Fill(localCircuit1.Conductor.Deplete())
-					//localCircuit1.Send.Fill(localCircuit1.Conductor.Deplete())
+				if localCircuit2.Conductor.LastOperation != http.StatusServiceUnavailable {
+					localCircuit1.Send.Fill(localCircuit1.Conductor.Deplete())
+					// Slow things down if there are too many requests.
 				} else {
-					localCircuit1.Switch.Fill(localCircuit1.Conductor.Deplete())
+					if localCircuit1.Switch.LastOperation != http.StatusServiceUnavailable {
+						localCircuit1.Switch.Fill(localCircuit1.Conductor.Deplete())
+					}
+					localCircuit1.Conductor.LastOperation = localCircuit1.Switch.LastOperation
 				}
 			case <-localCircuit1.Switch.Check():
 				fmt.Printf("Speaking Word [HOLD]: %d\n", len(localCircuit1.Switch.Channel))
@@ -127,9 +136,9 @@ func main() {
 	go func() {
 		fmt.Printf("Starting Written Word App (2)...\n")
 		localCircuit2 = Circuit{}
-		localCircuit2 = localCircuit2.New()
-		//localCircuit2.Conductor.LastOperation = http.StatusAccepted
+		localCircuit2 = *localCircuit2.New()
 		localCircuit1.Send = &localCircuit2.Conductor
+		//localCircuit2.Conductor.LastOperation = http.StatusAccepted
 		for {
 			// Watch for stuff to happen.
 			select {
